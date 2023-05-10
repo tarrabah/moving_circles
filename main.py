@@ -387,7 +387,7 @@ class Main_window(tk.Tk):
             self.stack.curr().get_circle().activate()
             self.canvas.itemconfigure(self.stack.curr().get_circle().get_id(), state='normal')
         elif self.stack.curr().get_type() is Command_types.CUT_PASTE:
-            self.stack.curr().get_circle().set_coords(*self.stack.curr.get_old_coords())
+            self.stack.curr().get_circle().set_coords(*self.stack.curr().get_old_coords())
             self.stack.curr().get_circle().deactivate()
             self.canvas.itemconfigure(self.stack.curr().get_circle().get_id(), state='hidden')
         #elif self.stack.curr().get_type() is Command_types.COPY:
