@@ -191,6 +191,7 @@ class Main_window(tk.Tk):
         self.clear_canvas()         # deletes previous circles
         self.init_circle_array(5)   # creates new ones
         self.start_simulation()     # they start moving
+        self.stack.clear()
 
     def file_open(self) -> None:
         # these timestamps are needed to compensate time during which circles are not moving,
@@ -227,6 +228,7 @@ class Main_window(tk.Tk):
         curr_t: float = time.time()
         self.lag -= (curr_t - prev_t)
         # simulation starts moving
+        self.stack.clear()
         self.start_simulation()
 
     # saves circle parameters to a file

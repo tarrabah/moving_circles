@@ -49,3 +49,8 @@ class Stack:
 
     def __str__(self) -> str:
         return 'stack pointer: ' + str(self.__stack_pointer) + '\n' + '\n'.join(list(map(lambda x: x.__str__(), self.__stack)))
+
+    def clear(self):
+        self.__stack = []
+        self.__stack_pointer = -1
+        self.__stack_len = 0
