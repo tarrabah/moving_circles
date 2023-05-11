@@ -29,6 +29,7 @@ class Main_window(tk.Tk):
         self.H : int = 1000
         self.title('circles')
         self.geometry(str(self.W) + 'x' + str(self.H))
+        self.resizable(False, False)
 
         # Canvas
         self.canvas : tk.Canvas = tk.Canvas(self, width=self.W, height=self.H, bg='white')
@@ -123,6 +124,7 @@ class Main_window(tk.Tk):
                 )
                 # makes circles clickable
                 self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<Button-1>', self.on_circle_click)
+                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<B2-Motion>', self.relocate)
         '''
         for i in range(num):
             # Circle parameters
@@ -246,13 +248,14 @@ class Main_window(tk.Tk):
                 )
                 # makes circles clickable
                 self.canvas.tag_bind(self.circle_array[id].get_id(), '<Button-1>', self.on_circle_click)
+                self.canvas.tag_bind(self.circle_array[id].get_id(), '<B2-Motion>', self.relocate)
 
         # lag compensation
         curr_t: float = time.time()
         self.lag -= (curr_t - prev_t)
         # simulation starts moving
         self.stack.clear()
-        self.start_simulation()
+       # self.start_simulation()
 
     # saves circle parameters to a file
     def file_save(self) -> None:
@@ -272,7 +275,7 @@ class Main_window(tk.Tk):
         curr_t: float = time.time()
         self.lag -= (curr_t - prev_t)
         # simulation starts moving
-        self.start_simulation()
+        #self.start_simulation()
 
     # saves circles to a new file
     def file_save_as(self) -> None:
@@ -293,7 +296,7 @@ class Main_window(tk.Tk):
         # lag compensation at work
         curr_t = time.time()
         self.lag -= (curr_t - prev_t)
-        self.start_simulation()
+        #self.start_simulation()
 
     def file_recent(self):
         pass
@@ -351,27 +354,29 @@ class Main_window(tk.Tk):
 
     # handles 'edit_menu' -> 'undo'
     def edit_undo(self) -> None:
-        # if stack contains commands
-        if self.stack.can_go_down():
-            if self.stack.curr().get_type() is not Command_types.COPY:
-                self.rollback()
-                self.stack.go_down()
-            else:
-                # because copy cannot be executed
-                if self.stack.can_go_down():
+        if not self.simulation_status:
+            # if stack contains commands
+            if self.stack.can_go_down():
+                if self.stack.curr().get_type() is not Command_types.COPY:
+                    self.rollback()
                     self.stack.go_down()
-                    self.edit_undo()
+                else:
+                    # because copy cannot be executed
+                    if self.stack.can_go_down():
+                        self.stack.go_down()
+                        self.edit_undo()
 
     # handles 'edit_menu' -> redo
     def edit_redo(self) -> None:
         #print(self.stack)
-        if self.stack.can_go_up():
-            self.stack.go_up()
-            if self.stack.curr().get_type() is not Command_types.COPY:
-                self.execute()
-            #
-            else:
-                self.edit_redo()
+        if not self.simulation_status:
+            if self.stack.can_go_up():
+                self.stack.go_up()
+                if self.stack.curr().get_type() is not Command_types.COPY:
+                    self.execute()
+                #
+                else:
+                    self.edit_redo()
 
     # executes current command on stack
     def execute(self) -> None:
@@ -559,7 +564,21 @@ class Main_window(tk.Tk):
             print(e)
             exit()
 
+    def relocate(self, event):
+        print('relocate')
+        print(self.canvas.winfo_pointerxy())
+        if not self.simulation_status:
+            # prevents on_canvas_click from working
+            self.circle_clicked = True
+            # getting id of circle
+            id: int = event.widget.find_closest(event.x, event.y)[0]
+            #print(self.canvas.winfo_pointerxy())
 
+            x0, y0 = self.canvas.winfo_pointerxy()
+            x0 -= self.canvas.winfo_rootx()
+            y0 -= self.canvas.winfo_rooty()
+            self.canvas.coords(self.id_of_selected_circle, x0, y0)
+            self.circle_array[self.id_of_selected_circle].set_coords(x0, y0)
 
 
 win = Main_window()
