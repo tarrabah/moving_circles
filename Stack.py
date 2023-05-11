@@ -16,7 +16,8 @@ class Stack:
         else:
             self.__stack_pointer += 1
             self.__stack[self.__stack_pointer] = command
-            self.__stack = self.__stack[self.__stack_pointer + 1]
+            self.__stack = self.__stack[:self.__stack_pointer + 1]
+            self.__stack_len = len(self.__stack)
 
     def curr(self) -> Command:
         if self.__stack_pointer > -1:
