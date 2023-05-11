@@ -25,8 +25,8 @@ class Main_window(tk.Tk):
         ### VISUAL PART
 
         # WIndow parameters
-        self.W : int = 1000
-        self.H : int = 800
+        self.W : int = 1600
+        self.H : int = 1000
         self.title('circles')
         self.geometry(str(self.W) + 'x' + str(self.H))
 
@@ -101,6 +101,29 @@ class Main_window(tk.Tk):
 
     # creates circles
     def init_circle_array(self, num: int) -> None:
+        cell_width : int = int(self.W / 6)
+        cell_height : int = int (self.H / 5)
+        for i in range(6):
+            for j in range(5):
+
+                r: float = random.randint(50, 80)
+                d: float = r + r
+                x: float = random.randint(i * cell_width, (i + 1) * cell_width - d)
+                y: float = random.randint(j * cell_height, (j+ 1) * cell_height - d)
+                #self.canvas.create_line(i * cell_width, j * cell_height, i * cell_width,  j * cell_height + d)
+                #self.canvas.create_line(i * cell_width, j * cell_height, i * cell_width + d, j * cell_height + d)
+
+                color: str = color_array[random.randint(0, color_array_len - 1)]
+                # creates circle on Canvas
+                canvas_id: int = self.canvas.create_oval(x, y, x + d, y + d, outline=color, fill=color)
+                # adds circles to be processed in main cycle
+                self.circle_array[canvas_id] = Circle(
+                    self.canvas,
+                    x, y, r, color, canvas_id
+                )
+                # makes circles clickable
+                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<Button-1>', self.on_circle_click)
+        '''
         for i in range(num):
             # Circle parameters
             r: float = random.randint(50, 80)
@@ -117,7 +140,7 @@ class Main_window(tk.Tk):
             )
             # makes circles clickable
             self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<Button-1>', self.on_circle_click)
-
+        '''
     def main_loop(self) -> None:
         prev_t: float = time.time()
 
@@ -179,21 +202,25 @@ class Main_window(tk.Tk):
 
     # circles start moving
     def start_simulation(self) -> None:
+        self.hide_all_menus()
         self.simulation_status = True
 
     # circles stop moving
     def stop_simulation(self) -> None:
+        self.hide_all_menus()
         self.simulation_status = False
 
     # starts new simulation
     def file_new(self) -> None:
+        self.hide_all_menus()
         self.stop_simulation()      # stops simulation
         self.clear_canvas()         # deletes previous circles
-        self.init_circle_array(5)   # creates new ones
+        self.init_circle_array(30)   # creates new ones
         self.start_simulation()     # they start moving
         self.stack.clear()
 
     def file_open(self) -> None:
+        self.hide_all_menus()
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         prev_t: float = time.time()
@@ -233,6 +260,7 @@ class Main_window(tk.Tk):
 
     # saves circle parameters to a file
     def file_save(self) -> None:
+        self.hide_all_menus()
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         self.stop_simulation()
@@ -252,6 +280,7 @@ class Main_window(tk.Tk):
 
     # saves circles to a new file
     def file_save_as(self) -> None:
+        self.hide_all_menus()
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         self.stop_simulation()
@@ -544,6 +573,12 @@ class Main_window(tk.Tk):
         except Exception as e:
             print(e)
             exit()
+
+    def hide_all_menus(self):
+        if self.popup_mode:
+            self.popdown()
+        self.paste_menu.unpost()
+
 
 
 win = Main_window()
