@@ -44,8 +44,8 @@ class Main_window(tk.Tk):
         self.file_menu.add_command(label="Open...", command=self.file_open)
         self.file_menu.add_command(label="Save", command=self.file_save)
         self.file_menu.add_command(label="Save as", command=self.file_save_as)
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Recent files", command=self.file_recent)
+        #self.file_menu.add_separator()
+        #self.file_menu.add_command(label="Recent files", command=self.file_recent)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit", command=self.exit)
         self.top_menu.add_cascade(label="File", menu=self.file_menu)
@@ -163,37 +163,37 @@ class Main_window(tk.Tk):
 
     # handles on circle click
     def on_circle_click(self, event: tk.Event) -> None:
-        # prevents on_canvas_click from working
-        self.circle_clicked = True
-        # getting id of circle
-        id: int = event.widget.find_closest(event.x, event.y)[0]
-        # if not the same circle
-        if id != self.id_of_selected_circle:
-            # change outline to better show, that this circle is chosen
-            self.canvas.itemconfig(id, outline='black')
-            # simulation stops
-            self.stop_simulation()
-            # popup meny pops up
-            self.popup(event, id)
-        else:
-            self.popdown()
+        if not self.simulation_status:
+            # prevents on_canvas_click from working
+            self.circle_clicked = True
+            # getting id of circle
+            id: int = event.widget.find_closest(event.x, event.y)[0]
+            # if not the same circle
+            if id != self.id_of_selected_circle:
+                # change outline to better show, that this circle is chosen
+                self.canvas.itemconfig(id, outline='black')
+                # popup meny pops up
+                self.popup(event, id)
+            else:
+                self.popdown()
 
     # handles on canvas click
     def on_canvas_click(self, event: tk.Event) -> None:
-        if not self.circle_clicked:
-            # closes menu if opened
-            if self.popup_mode:
-                self.popdown()
-            if not self.stack.is_empty():
-                if self.stack.curr().get_type() is not Command_types.CUT_PASTE:
-                    # display the popup menu
-                    try:
-                        self.paste_menu.tk_popup(event.x_root, event.y_root, 0)
-                        # print(self.paste_menu.winfo_x(), self.paste_menu.winfo_y())
-                    finally:
-                        # Release the grab
-                        self.paste_menu.grab_release()
-        self.circle_clicked = False
+        if not self.simulation_status:
+            if not self.circle_clicked:
+                # closes menu if opened
+                if self.popup_mode:
+                    self.popdown()
+                if not self.stack.is_empty():
+                    if self.stack.curr().get_type() is not Command_types.CUT_PASTE:
+                        # display the popup menu
+                        try:
+                            self.paste_menu.tk_popup(event.x_root, event.y_root, 0)
+                            # print(self.paste_menu.winfo_x(), self.paste_menu.winfo_y())
+                        finally:
+                            # Release the grab
+                            self.paste_menu.grab_release()
+            self.circle_clicked = False
 
     # updates position of every circle on canvas
     def update_method(self, ms: float) -> None:
@@ -202,25 +202,21 @@ class Main_window(tk.Tk):
 
     # circles start moving
     def start_simulation(self) -> None:
-        self.hide_all_menus()
         self.simulation_status = True
 
     # circles stop moving
     def stop_simulation(self) -> None:
-        self.hide_all_menus()
         self.simulation_status = False
 
     # starts new simulation
     def file_new(self) -> None:
-        self.hide_all_menus()
         self.stop_simulation()      # stops simulation
         self.clear_canvas()         # deletes previous circles
         self.init_circle_array(30)   # creates new ones
-        self.start_simulation()     # they start moving
+        #self.start_simulation()     # they start moving
         self.stack.clear()
 
     def file_open(self) -> None:
-        self.hide_all_menus()
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         prev_t: float = time.time()
@@ -260,7 +256,7 @@ class Main_window(tk.Tk):
 
     # saves circle parameters to a file
     def file_save(self) -> None:
-        self.hide_all_menus()
+
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         self.stop_simulation()
@@ -280,7 +276,6 @@ class Main_window(tk.Tk):
 
     # saves circles to a new file
     def file_save_as(self) -> None:
-        self.hide_all_menus()
         # these timestamps are needed to compensate time during which circles are not moving,
         # but while they stay still lag is growing
         self.stop_simulation()
@@ -347,7 +342,9 @@ class Main_window(tk.Tk):
             new_y = self.paste_menu.winfo_y() - self.winfo_y()
 
             self.stack.put(
-                Command(Command_types.COPY_PASTE, self.circle_array[previous_command.get_circle().get_id()], new_x=new_x, new_y=new_y)
+                Command(Command_types.COPY_PASTE, self.circle_array[previous_command.get_circle().get_id()],
+                        new_x=new_x, new_y=new_y
+                )
             )
         self.execute()
         self.paste_menu.unpost()
@@ -391,6 +388,7 @@ class Main_window(tk.Tk):
             self.stack.curr().get_circle().activate()
             # shows circle on canvas
             self.canvas.itemconfigure(self.stack.curr().get_circle().get_id(), state='normal')
+            self.stack.curr().get_circle().update(0)
         #elif self.stack.curr().get_type() is Command_types.COPY:
             #pass
             # COPY cannot be executed
@@ -450,17 +448,15 @@ class Main_window(tk.Tk):
 
     # handles 'popup_menu' -> 'change color'
     def popup_choose_color(self) -> None:
-        # these timestamps are needed to compensate time during which circles are not moving,
-        # but while they stay still lag is growing
-        self.stop_simulation()
-        prev_t: float = time.time()
 
         # ask for color
         color: str = colorchooser.askcolor()
         # sets color
+
         if color[1] is not None:
-            self.circle_array[self.id_of_selected_circle].color = color[1]
+            self.circle_array[self.id_of_selected_circle].set_color(color[1])
             self.canvas.itemconfig(self.id_of_selected_circle, fill=color[1])
+            self.circle_array[self.id_of_selected_circle].update(0)
 
         # popup mode is turned off
         self.popup_mode = False
@@ -472,26 +468,19 @@ class Main_window(tk.Tk):
         # no circle is chosen
         self.id_of_selected_circle = None
 
-        # lag compensation
-        curr_t: float = time.time()
-        self.lag -= (curr_t - prev_t)
-        self.start_simulation()
 
     # handles 'popup_menu' -> 'change radius'
     def popup_set_radius(self):
-        # these timestamps are needed to compensate time during which circles are not moving,
-        # but while they stay still lag is growing
-        self.stop_simulation()
-        prev_t: float = time.time()
 
         r = simpledialog.askinteger(
             "Radius", "Input number in range [50; 80]",
             parent=self,
-            minvalue=50, maxvalue=80
+            minvalue=50, maxvalue=80, initialvalue=self.circle_array[self.id_of_selected_circle].get_r()
         )
 
         if r is not None:
             self.circle_array[self.id_of_selected_circle].set_r(r)
+            self.circle_array[self.id_of_selected_circle].update(0)
 
         # popup mode is turned off
         self.popup_mode = False
@@ -501,10 +490,6 @@ class Main_window(tk.Tk):
         # no circle is chosen
         self.id_of_selected_circle = None
 
-        # lag compensation at work
-        curr_t: float = time.time()
-        self.lag -= (curr_t - prev_t)
-        self.start_simulation()
 
     def popup(self, event, id) -> None:
         # if circle clicked at while popup menu is still present
@@ -536,7 +521,7 @@ class Main_window(tk.Tk):
         # no circle is chosen
         self.id_of_selected_circle = None
         # simulation starts
-        self.start_simulation()
+       # self.start_simulation()
 
     # clears canvas
     def clear_canvas(self) -> None:
@@ -574,10 +559,6 @@ class Main_window(tk.Tk):
             print(e)
             exit()
 
-    def hide_all_menus(self):
-        if self.popup_mode:
-            self.popdown()
-        self.paste_menu.unpost()
 
 
 

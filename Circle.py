@@ -58,6 +58,9 @@ class Circle:
     def get_color(self) -> str:
         return self.__color
 
+    def set_color(self, new_color) -> None:
+        self.__color = new_color
+
     def get_id(self) -> int:
         return self.__id
 
