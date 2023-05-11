@@ -49,6 +49,12 @@ class Circle:
     def get_coords(self) -> tuple[float, float]:
         return self.__x, self.__y
 
+    def get_x(self) -> float:
+        return self.__x
+
+    def get_y(self) -> float:
+        return self.__y
+
     def get_color(self) -> str:
         return self.__color
 

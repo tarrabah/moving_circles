@@ -562,10 +562,10 @@ class Main_window(tk.Tk):
             for i in self.circle_array.values():
                 circle_properties.append(
                     [
-                        i.x,
-                        i.y,
-                        i.r,
-                        i.color
+                        i.get_x(),
+                        i.get_y(),
+                        i.get_r(),
+                        i.get_color()
                     ]
                 )
             pickle.dump(circle_properties, file_desc)
