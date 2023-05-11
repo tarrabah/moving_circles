@@ -123,8 +123,8 @@ class Main_window(tk.Tk):
                     x, y, r, color, canvas_id
                 )
                 # makes circles clickable
-                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<Button-1>', self.on_circle_click)
-                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<B2-Motion>', self.relocate)
+                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<Button-3>', self.on_circle_click)
+                self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<B2-Motion>', self.relocate_circle)
         '''
         for i in range(num):
             # Circle parameters
@@ -247,8 +247,8 @@ class Main_window(tk.Tk):
                     x, y, r, color, id
                 )
                 # makes circles clickable
-                self.canvas.tag_bind(self.circle_array[id].get_id(), '<Button-1>', self.on_circle_click)
-                self.canvas.tag_bind(self.circle_array[id].get_id(), '<B2-Motion>', self.relocate)
+                self.canvas.tag_bind(self.circle_array[id].get_id(), '<Button-3>', self.on_circle_click)
+                self.canvas.tag_bind(self.circle_array[id].get_id(), '<B2-Motion>', self.relocate_circle)
 
         # lag compensation
         curr_t: float = time.time()
@@ -413,7 +413,9 @@ class Main_window(tk.Tk):
             self.stack.curr().set_circle(self.circle_array[canvas_id])
             self.stack.curr().get_circle().set_id(canvas_id)
             # makes circle clickable
-            self.canvas.tag_bind(canvas_id, '<Button-1>', self.on_circle_click)
+            self.canvas.tag_bind(canvas_id, '<Button-3>', self.on_circle_click)
+            self.canvas.tag_bind(self.circle_array[canvas_id].get_id(), '<B2-Motion>', self.relocate_circle)
+
 
     # rolls back current command on stack
     def rollback(self) -> None:
@@ -564,9 +566,9 @@ class Main_window(tk.Tk):
             print(e)
             exit()
 
-    def relocate(self, event):
-        print('relocate')
-        print(self.canvas.winfo_pointerxy())
+    def relocate_circle(self, event):
+        #print('relocate')
+        #print(self.canvas.winfo_pointerxy())
         if not self.simulation_status:
             # prevents on_canvas_click from working
             self.circle_clicked = True
@@ -575,10 +577,10 @@ class Main_window(tk.Tk):
             #print(self.canvas.winfo_pointerxy())
 
             x0, y0 = self.canvas.winfo_pointerxy()
-            x0 -= self.canvas.winfo_rootx()
-            y0 -= self.canvas.winfo_rooty()
-            self.canvas.coords(self.id_of_selected_circle, x0, y0)
-            self.circle_array[self.id_of_selected_circle].set_coords(x0, y0)
+            x0 -= self.canvas.winfo_rootx() + self.circle_array[id].get_r()
+            y0 -= self.canvas.winfo_rooty() + self.circle_array[id].get_r()
+            self.canvas.coords(id, x0, y0, self.circle_array[id].get_r() * 2 + x0, self.circle_array[id].get_r() * 2 + y0)
+            self.circle_array[id].set_coords(x0, y0)
 
 
 win = Main_window()
